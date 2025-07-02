@@ -2,6 +2,7 @@
 import requests
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
+import re
 
 
 def download_xml(url: str, output_file: str) -> None:
@@ -46,17 +47,24 @@ def extract_text_from_xml(xml_content: str) -> str:
     Returns:
         str: The extracted text from the XML.
     """
+    # remove ... after <a> tags containing links
+    xml_content = str(xml_content)
+    xml_content = re.sub(r"</a>\.\.\.", "</a>", xml_content)
+
     soup = BeautifulSoup(xml_content, "lxml")
-    # find the div named "content"
-    content_div = soup.find("div", {"id": "content"})
+    # find the right div
+    content_div = soup.find("div", {"id": "viewLegContents"})
     if not content_div:
         raise ValueError("Content div not found in the HTML.")
-    # Extract the text from the content div
 
     # remove from text elements such as <a  of class="LegCommentaryLink"
     for link in content_div.find_all("a", class_="LegCommentaryLink"):
         link.decompose()
+    for annotations_div in content_div.find_all("div", class_="LegAnnotations"):
+        annotations_div.clear()
+    for span in content_div.find_all("span", class_="LegExtentRestriction"):
+        span.decompose()
 
-    text = content_div.get_text(separator="\n", strip=True)
+    text = content_div.get_text(separator=" ", strip=True)
 
     return text
