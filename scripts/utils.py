@@ -52,6 +52,7 @@ def extract_text_from_xml(xml_content: str) -> str:
     xml_content = re.sub(r"</a>\.\.\.", "</a>", xml_content)
 
     soup = BeautifulSoup(xml_content, "lxml")
+
     # find the right div
     content_div = soup.find("div", {"id": "viewLegContents"})
     if not content_div:
@@ -60,8 +61,11 @@ def extract_text_from_xml(xml_content: str) -> str:
     # remove from text elements such as <a  of class="LegCommentaryLink"
     for link in content_div.find_all("a", class_="LegCommentaryLink"):
         link.decompose()
+    # remove from text elements such as <span class="LegCommentaryLink"
     for annotations_div in content_div.find_all("div", class_="LegAnnotations"):
         annotations_div.clear()
+
+    # remove from text elements such as <span class="LegExtentRestriction"
     for span in content_div.find_all("span", class_="LegExtentRestriction"):
         span.decompose()
 
